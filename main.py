@@ -1,35 +1,25 @@
 import os
 import sys
 
-import canvasapi
 import dotenv
+from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 
+dotenv.load_dotenv(dotenv.find_dotenv())
 
-def main() -> None:
-    """Entry point for retrieving Canvas user details."""
+token = os.environ.get("CANVAS_API_TOKEN")
+base_url = "https://ubc.instructure.com"
 
-    dotenv.load_dotenv(dotenv.find_dotenv())
+if not token or not token.strip():
+    sys.exit(
+        "Missing CANVAS_API_TOKEN environment variable. "
+        "Set it before running this script."
+    )
 
-    token = os.environ.get("CANVAS_API_TOKEN")
-    base_url = "https://ubc.instructure.com"
+try:
+    canvas_api = Canvas(base_url, token)
+    result = canvas_api.get_user("self")
+except CanvasException as exc:
+    sys.exit(f"Failed to authenticate with Canvas API: {exc}")
 
-    if not token or not token.strip():
-        print(
-            "Missing CANVAS_API_TOKEN environment variable. "
-            "Set it before running this script."
-        )
-        sys.exit(1)
-
-    try:
-        canvas_api = canvasapi.Canvas(base_url, token)
-        result = canvas_api.get_user("self")
-    except CanvasException as exc:
-        print(f"Failed to authenticate with Canvas API: {exc}")
-        sys.exit(1)
-
-    print(result.attributes)
-
-
-if __name__ == "__main__":
-    main()
+print(result.attributes)
